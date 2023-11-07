@@ -3,9 +3,9 @@ title: 'SOC 756 DemTech II'
 author: "Iris Zhao"
 fontsize: 11pt
 output:
-  pdf_document: default
   html_document:
     df_print: paged
+  pdf_document: default
   word_document: default
 header-includes: \usepackage{pdfpages}
 geometry: margin=0.75in
@@ -43,40 +43,49 @@ data <- read.csv("C:\\Users\\Iris\\MyDrive\\D\\UW-Madison\\Classes\\SOC756_DemTe
 
 # Table2: GRR to fertility rates, assume constant over time and ages
 # Each 5 years long; 6 Intervals (15-19, 20-24, 25-29, 30-34, 35-39, 40-44), 1-5 means education level
-fb1 <- (2.18/6)
-fb2 <- (2.18/6)
-fb3 <- (1.67/6)
-fb4 <- (1.43/6)
-fb5 <- (1.01/6)
+fb <- matrix(c(0, 0, 0, 0.0815, 0.1199, 
+               0.1019, 0.0733, 0.042, 0.0172, 0, 
+               0, 0, 0, 0.0922, 0.1317, 
+               0.0957, 0.0640, 0.0376, 0.0156, 0, 
+               0, 0, 0, 0.0376, 0.1123, 
+               0.0872, 0.0537, 0.0306, 0.0119, 0, 
+               0, 0, 0, 0.0205, 0.0951, 
+               0.0778, 0.0522, 0.0283, 0.0129, 0, 
+               0, 0, 0, 0.0079, 0.0481, 
+               0.0665, 0.0456, 0.0253, 0.0079, 0), nrow=10, ncol=5)
 
-fb <- matrix(c(fb1, fb2, fb3, fb4, fb5), nrow=5, ncol=5, byrow=TRUE) # black fertility rates by education
 
-fw1 <- (1.76/6)
-fw2 <- (1.81/6)
-fw3 <- (1.62/6)
-fw4 <- (1.54/6)
-fw5 <- (1.27/6)
+fw <- matrix(c(0, 0, 0, 0.0623, 0.1053, 
+               0.0868, 0.0562, 0.0304, 0.0106, 0, 
+               0, 0, 0, 0.0759, 0.1237, 
+               0.0816, 0.0474, 0.0247, 0.0079, 0, 
+               0, 0, 0, 0.0244, 0.1168, 
+               0.0938, 0.0546, 0.0271, 0.0083, 0, 
+               0, 0, 0, 0.008, 0.0974, 
+               0.1038, 0.0601, 0.029, 0.0095, 0, 
+               0, 0, 0, 0.0023, 0.0449, 
+               0.0993, 0.0679, 0.031, 0.0092, 0), nrow=10, ncol=5)
 
-fw <- matrix(c(fw1, fw2, fw3, fw4, fw5), nrow=5, ncol=5, byrow=TRUE) # white fertility rates by education
 
 # 5Li0t = 5Li0t/(2*l0it) (p19)
-Lb1 <- data$nLx[1]/(2*100000) 
-Lb2 <- data$nLx[11]/(2*100000)
-Lb3 <- data$nLx[21]/(2*100000)
-Lb4 <- data$nLx[31]/(2*100000)
-Lb5 <- data$nLx[41]/(2*100000)
+# nLx re-arranged by education and age groups; row is edu, column is age groups 
+Lb <- matrix(c(286188, 302932, 345975, 401302, 436487, 224755, 244586, 297310, 368415, 415788, 
+               211082, 231061, 284923, 359120, 409459, 197355, 217375, 272131, 349230, 402445, 
+               181123, 201066, 256565, 336800, 393143, 163593, 183300, 239235, 322539, 382150, 
+               145842, 165133, 221079, 307131, 370059, 128308, 146987, 202427, 290708, 356890, 
+               111728, 129594, 183918, 273585, 342620, 96459, 113319, 165484, 255751, 326868), nrow = 5, ncol = 10)
 
-Lw1 <- data$nLx[51]/(2*100000)
-Lw2 <- data$nLx[61]/(2*100000)
-Lw3 <- data$nLx[71]/(2*100000)
-Lw4 <- data$nLx[81]/(2*100000)
-Lw5 <- data$nLx[91]/(2*100000)
+Lw <- matrix(c(358423, 391479, 427946, 458227, 464829, 312996, 355535, 403919, 446125, 455230, 
+               301145, 345557, 396763, 442054, 451875, 288829, 335002, 389000, 437407, 447994, 
+               273746, 321825, 379009, 431059, 442612, 256847, 306795, 367341, 423362, 436017, 
+               239020, 290646, 354531, 414655, 428482, 220558, 273552, 340596, 404800, 419831, 
+               202046, 255899, 325613, 393503, 409690, 183737, 237756, 309320, 380112, 397315), nrow = 5, ncol = 10)
 
-Lb <- matrix(c(Lb1, Lb2, Lb3, Lb4, Lb5), nrow=5, ncol=5, byrow=TRUE) 
-Lw <- matrix(c(Lw1, Lw2, Lw3, Lw4, Lw5), nrow=5, ncol=5, byrow=TRUE) 
+Lw <- Lw/(2*100000)
+Lb <- Lb/(2*100000)
 
 
-#Survival matrix = nLx+1/nLx
+#Survival matrix 
 sb0 <- matrix(c(data$nLx[2]/data$nLx[1], 0, 0, 0, 0, 
                 0, data$nLx[12]/data$nLx[11], 0, 0, 0, 
                 0, 0, data$nLx[22]/data$nLx[21], 0, 0, 
@@ -248,7 +257,6 @@ Mblack <- matrix(c(z,   z,   bb10, bb15, bb20, bb25, bb30, bb35, bb40, bb45,
                    z,   z,   z,    z,    z,    z,    z,    sb35, z,    z, 
                    z,   z,   z,    z,    z,    z,    z,    z,    sb40, z),
                  nrow=50, ncol=50, byrow=TRUE)
-print(Mblack)
                   
 Mwhite <- matrix(c(z,   z,   bw10, bw15, bw20, bw25, bw30, bw35, bw40, bw45, 
                    sw0, z,   z,    z,    z,    z,    z,    z,    z,    z, 
@@ -261,7 +269,7 @@ Mwhite <- matrix(c(z,   z,   bw10, bw15, bw20, bw25, bw30, bw35, bw40, bw45,
                    z,   z,   z,    z,    z,    z,    z,    sw35, z,    z, 
                    z,   z,   z,    z,    z,    z,    z,    z,    sw40, z),
                  nrow=50, ncol=50, byrow=TRUE)
-print(Mwhite)
+
 
 ```
 

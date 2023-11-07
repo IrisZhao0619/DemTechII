@@ -1,0 +1,267 @@
+---
+title: 'SOC 756 DemTech II'
+author: "Iris Zhao"
+fontsize: 11pt
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+header-includes: \usepackage{pdfpages}
+geometry: margin=0.75in
+fig_crop: no
+---
+
+```{r setup, include=FALSE}
+library(MASS)
+library(GGally)
+library(openintro)
+library(mosaic)
+library(knitr)
+library(tidyverse)
+library(ggformula)
+library(gridExtra)
+library(broom)
+options(width=70, digits=6, scipen=8)
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+# Set R output size a bit smaller than default
+opts_chunk$set(size='small') 
+# Set the default to NOT display R code
+opts_chunk$set(echo=TRUE) 
+```
+
+```{r}
+# read nLx table 
+data <- read.csv("C:\\Users\\Iris\\MyDrive\\D\\UW-Madison\\Classes\\SOC756_DemTech_II\\PS\\W7\\nLx_values.csv")
+
+# see slides p19 - p31
+# underline logic: 
+
+# Table2: GRR to fertility rates, assume constant over time and ages
+# Each 5 years long; 6 Intervals (15-19, 20-24, 25-29, 30-34, 35-39, 40-44), 1-5 means education level
+fb1 <- (2.18/6)
+fb2 <- (2.18/6)
+fb3 <- (1.67/6)
+fb4 <- (1.43/6)
+fb5 <- (1.01/6)
+
+fb <- matrix(c(fb1, fb2, fb3, fb4, fb5), nrow=5, ncol=5, byrow=TRUE) # black fertility rates by education
+
+fw1 <- (1.76/6)
+fw2 <- (1.81/6)
+fw3 <- (1.62/6)
+fw4 <- (1.54/6)
+fw5 <- (1.27/6)
+
+fw <- matrix(c(fw1, fw2, fw3, fw4, fw5), nrow=5, ncol=5, byrow=TRUE) # white fertility rates by education
+
+# 5Li0t = 5Li0t/(2*l0it) (p19)
+Lb1 <- data$nLx[1]/(2*100000) 
+Lb2 <- data$nLx[11]/(2*100000)
+Lb3 <- data$nLx[21]/(2*100000)
+Lb4 <- data$nLx[31]/(2*100000)
+Lb5 <- data$nLx[41]/(2*100000)
+
+Lw1 <- data$nLx[51]/(2*100000)
+Lw2 <- data$nLx[61]/(2*100000)
+Lw3 <- data$nLx[71]/(2*100000)
+Lw4 <- data$nLx[81]/(2*100000)
+Lw5 <- data$nLx[91]/(2*100000)
+
+Lb <- matrix(c(Lb1, Lb2, Lb3, Lb4, Lb5), nrow=5, ncol=5, byrow=TRUE) 
+Lw <- matrix(c(Lw1, Lw2, Lw3, Lw4, Lw5), nrow=5, ncol=5, byrow=TRUE) 
+
+
+#Survival matrix = nLx+1/nLx
+sb0 <- matrix(c(data$nLx[2]/data$nLx[1], 0, 0, 0, 0, 
+                0, data$nLx[12]/data$nLx[11], 0, 0, 0, 
+                0, 0, data$nLx[22]/data$nLx[21], 0, 0, 
+                0, 0, 0,  data$nLx[32]/data$nLx[31], 0, 
+                0, 0, 0, 0,  data$nLx[42]/data$nLx[41]), 
+              nrow=5, ncol=5, byrow=TRUE)
+sw0 <- matrix(c(data$nLx[52]/data$nLx[51], 0, 0, 0, 0, 
+                0, data$nLx[62]/data$nLx[61], 0, 0, 0, 
+                0, 0, data$nLx[72]/data$nLx[71], 0, 0, 
+                0, 0, 0, data$nLx[82]/data$nLx[81], 0, 
+                0, 0, 0, 0, data$nLx[92]/data$nLx[91]), 
+              nrow=5, ncol=5, byrow=TRUE)
+
+sb5 <- matrix(c(data$nLx[3]/data$nLx[2], 0, 0, 0, 0, 
+                0, data$nLx[13]/data$nLx[12], 0, 0, 0, 
+                0, 0, data$nLx[23]/data$nLx[22], 0, 0, 
+                0, 0, 0, data$nLx[33]/data$nLx[32], 0, 
+                0, 0, 0, 0, data$nLx[43]/data$nLx[42]), 
+               nrow=5, ncol=5, byrow=TRUE)
+sw5 <- matrix(c(data$nLx[53]/data$nLx[52], 0, 0, 0, 0, 
+                0, data$nLx[63]/data$nLx[62], 0, 0, 0, 
+                0, 0, data$nLx[73]/data$nLx[72], 0, 0, 
+                0, 0, 0, data$nLx[83]/data$nLx[82], 0, 
+                0, 0, 0, 0, data$nLx[93]/data$nLx[92]), 
+               nrow=5, ncol=5, byrow=TRUE)
+
+sb10 <- matrix(c(data$nLx[4]/data$nLx[3], 0, 0, 0, 0, 
+                 0, data$nLx[14]/data$nLx[13], 0, 0, 0, 
+                 0, 0, data$nLx[24]/data$nLx[23], 0, 0, 
+                 0, 0, 0, data$nLx[34]/data$nLx[33], 0, 
+                 0, 0, 0, 0, data$nLx[44]/data$nLx[43]), 
+               nrow=5, ncol=5, byrow=TRUE)
+sw10 <- matrix(c(data$nLx[54]/data$nLx[53], 0, 0, 0, 0, 
+                 0, data$nLx[64]/data$nLx[63], 0, 0, 0, 
+                 0, 0, data$nLx[74]/data$nLx[73], 0, 0, 
+                 0, 0, 0, data$nLx[84]/data$nLx[83], 0, 
+                 0, 0, 0, 0, data$nLx[94]/data$nLx[93]), 
+               nrow=5, ncol=5, byrow=TRUE)
+
+sb15 <- matrix(c(data$nLx[5]/data$nLx[4], 0, 0, 0, 0, 
+                 0, data$nLx[15]/data$nLx[14], 0, 0, 0, 
+                 0, 0, data$nLx[25]/data$nLx[24], 0, 0, 
+                 0, 0, 0, data$nLx[35]/data$nLx[34], 0, 
+                 0, 0, 0, 0, data$nLx[45]/data$nLx[44]), 
+               nrow=5, ncol=5, byrow=TRUE)
+sw15 <- matrix(c(data$nLx[55]/data$nLx[54], 0, 0, 0, 0, 
+                 0, data$nLx[65]/data$nLx[64], 0, 0, 0, 
+                 0, 0, data$nLx[75]/data$nLx[74], 0, 0, 
+                 0, 0, 0, data$nLx[85]/data$nLx[84], 0, 
+                 0, 0, 0, 0, data$nLx[95]/data$nLx[94]), 
+               nrow=5, ncol=5, byrow=TRUE)
+
+sb20 <- matrix(c(data$nLx[6]/data$nLx[5], 0, 0, 0, 0, 
+                 0, data$nLx[16]/data$nLx[15], 0, 0, 0, 
+                 0, 0, data$nLx[26]/data$nLx[25], 0, 0,  
+                 0, 0, 0, data$nLx[36]/data$nLx[35], 0, 
+                 0, 0, 0, 0, data$nLx[46]/data$nLx[45]), 
+               nrow=5, ncol=5, byrow=TRUE)
+sw20 <- matrix(c(data$nLx[56]/data$nLx[55], 0, 0, 0, 0, 
+                 0, data$nLx[66]/data$nLx[65], 0, 0, 0, 
+                 0, 0, data$nLx[76]/data$nLx[75], 0, 0, 
+                 0, 0, 0, data$nLx[86]/data$nLx[85], 0, 
+                 0, 0, 0, 0, data$nLx[96]/data$nLx[95]), 
+               nrow=5, ncol=5, byrow=TRUE)
+
+sb25 <- matrix(c(data$nLx[7]/data$nLx[6], 0, 0, 0, 0, 
+                 0, data$nLx[17]/data$nLx[16], 0, 0, 0, 
+                 0, 0, data$nLx[27]/data$nLx[26], 0, 0, 
+                 0, 0, 0, data$nLx[37]/data$nLx[36], 0, 
+                 0, 0, 0, 0, data$nLx[47]/data$nLx[46]), 
+               nrow=5, ncol=5, byrow=TRUE)
+sw25 <- matrix(c(data$nLx[57]/data$nLx[56], 0, 0, 0, 0, 
+                 0, data$nLx[67]/data$nLx[66], 0, 0, 0, 
+                 0, 0, data$nLx[77]/data$nLx[76], 0, 0, 
+                 0, 0, 0, data$nLx[87]/data$nLx[86], 0, 
+                 0, 0, 0, 0, data$nLx[97]/data$nLx[96]), 
+               nrow=5, ncol=5, byrow=TRUE)
+
+sb30 <- matrix(c(data$nLx[8]/data$nLx[7], 0, 0, 0, 0, 
+                 0, data$nLx[18]/data$nLx[17], 0, 0, 0, 
+                 0, 0, data$nLx[28]/data$nLx[27], 0, 0, 
+                 0, 0, 0, data$nLx[38]/data$nLx[37], 0, 
+                 0, 0, 0, 0, data$nLx[48]/data$nLx[47]), 
+               nrow=5, ncol=5, byrow=TRUE)
+sw30 <- matrix(c(data$nLx[58]/data$nLx[57], 0, 0, 0, 0, 
+                 0, data$nLx[68]/data$nLx[67], 0, 0, 0, 
+                 0, 0, data$nLx[78]/data$nLx[77], 0, 0, 
+                 0, 0, 0, data$nLx[88]/data$nLx[87], 0, 
+                 0, 0, 0, 0, data$nLx[98]/data$nLx[97]), 
+               nrow=5, ncol=5, byrow=TRUE)
+
+sb35 <- matrix(c(data$nLx[9]/data$nLx[8], 0, 0, 0, 0, 
+                 0, data$nLx[19]/data$nLx[18], 0, 0, 0, 
+                 0, 0, data$nLx[29]/data$nLx[28], 0, 0, 
+                 0, 0, 0, data$nLx[39]/data$nLx[38], 0, 
+                 0, 0, 0, 0, data$nLx[49]/data$nLx[48]), 
+               nrow=5, ncol=5, byrow=TRUE)
+sw35 <- matrix(c(data$nLx[59]/data$nLx[58], 0, 0, 0, 0, 
+                 0, data$nLx[69]/data$nLx[68], 0, 0, 0, 
+                 0, 0, data$nLx[79]/data$nLx[78], 0, 0, 
+                 0, 0, 0, data$nLx[89]/data$nLx[88], 0, 
+                 0, 0, 0, 0, data$nLx[99]/data$nLx[98]), 
+               nrow=5, ncol=5, byrow=TRUE)
+
+sb40 <- matrix(c(data$nLx[10]/data$nLx[9], 0, 0, 0, 0, 
+                 0, data$nLx[20]/data$nLx[19], 0, 0, 0, 
+                 0, 0, data$nLx[30]/data$nLx[29], 0, 0, 
+                 0, 0, 0, data$nLx[40]/data$nLx[39], 0, 
+                 0, 0, 0, 0, data$nLx[50]/data$nLx[49]), 
+               nrow=5, ncol=5, byrow=TRUE)
+sw40 <- matrix(c(data$nLx[60]/data$nLx[59], 0, 0, 0, 0, 
+                 0, data$nLx[70]/data$nLx[69], 0, 0, 0, 
+                 0, 0, data$nLx[80]/data$nLx[79], 0, 0, 
+                 0, 0, 0, data$nLx[90]/data$nLx[89], 0, 
+                 0, 0, 0, 0, data$nLx[100]/data$nLx[99]), 
+               nrow=5, ncol=5, byrow=TRUE)
+
+
+# mobility matrix - table 3
+mw <- matrix(c(0.132, 0.179, 0.485, 0.130, 0.075,
+               0.034, 0.150, 0.427, 0.208, 0.180,
+               0.014, 0.061, 0.457, 0.250, 0.217,
+               0.010, 0.027, 0.243, 0.338, 0.381,
+               0.001, 0.033, 0.143, 0.259, 0.564),
+                 nrow=5, ncol=5, byrow = TRUE)
+
+mb <- matrix(c(0.289, 0.268, 0.243, 0.126, 0.073,
+               0.079, 0.350, 0.278, 0.164, 0.129,
+               0.025, 0.190, 0.386, 0.212, 0.188,
+               0.033, 0.038, 0.243, 0.496, 0.189,
+               0.000, 0.032, 0.163, 0.371, 0.434),
+                 nrow=5, ncol=5, byrow = TRUE)
+
+# birth
+bw10 <- Lw*(fw+sw5*fw)*mw
+bb10 <- Lb*(fb+sb5*fb)*mb
+
+bw15 <- Lw*(fw+sw10*fw)*mw
+bb15 <- Lb*(fb+sb10*fb)*mb
+
+bw20 <- Lw*(fw+sw15*fw)*mw
+bb20 <- Lb*(fb+sb15*fb)*mb
+
+bw25 <- Lw*(fw+sw20*fw)*mw
+bb25 <- Lb*(fb+sb20*fb)*mb
+
+bw30 <- Lw*(fw+sw25*fw)*mw
+bb30 <- Lb*(fb+sb25*fb)*mb
+
+bw35 <- Lw*(fw+sw30*fw)*mw
+bb35 <- Lb*(fb+sb30*fb)*mb
+
+bw40 <- Lw*(fw+sw35*fw)*mw
+bb40 <- Lb*(fb+sb35*fb)*mb
+
+bw45 <- Lw*(fw+sw40*fw)*mw
+bb45 <- Lb*(fb+sb40*fb)*mb
+
+z <- matrix(c(0), nrow=5, ncol=5, byrow=TRUE)
+
+Mblack <- matrix(c(z,   z,   bb10, bb15, bb20, bb25, bb30, bb35, bb40, bb45, 
+                   sb0, z,   z,    z,    z,    z,    z,    z,    z,    z, 
+                   z,   sb5, z,    z,    z,    z,    z,    z,    z,    z, 
+                   z,   z,   sb10, z,    z,    z,    z,    z,    z,    z, 
+                   z,   z,   z,    sb15, z,    z,    z,    z,    z,    z, 
+                   z,   z,   z,    z,    sb20, z,    z,    z,    z,    z, 
+                   z,   z,   z,    z,    z,    sb25, z,    z,    z,    z, 
+                   z,   z,   z,    z,    z,    z,    sb30, z,    z,    z, 
+                   z,   z,   z,    z,    z,    z,    z,    sb35, z,    z, 
+                   z,   z,   z,    z,    z,    z,    z,    z,    sb40, z),
+                 nrow=50, ncol=50, byrow=TRUE)
+print(Mblack)
+                  
+Mwhite <- matrix(c(z,   z,   bw10, bw15, bw20, bw25, bw30, bw35, bw40, bw45, 
+                   sw0, z,   z,    z,    z,    z,    z,    z,    z,    z, 
+                   z,   sw5, z,    z,    z,    z,    z,    z,    z,    z, 
+                   z,   z,   sw10, z,    z,    z,    z,    z,    z,    z, 
+                   z,   z,   z,    sw15, z,    z,    z,    z,    z,    z, 
+                   z,   z,   z,    z,    sw20, z,    z,    z,    z,    z, 
+                   z,   z,   z,    z,    z,    sw25, z,    z,    z,    z, 
+                   z,   z,   z,    z,    z,    z,    sw30, z,    z,    z, 
+                   z,   z,   z,    z,    z,    z,    z,    sw35, z,    z, 
+                   z,   z,   z,    z,    z,    z,    z,    z,    sw40, z),
+                 nrow=50, ncol=50, byrow=TRUE)
+print(Mwhite)
+
+```
+
